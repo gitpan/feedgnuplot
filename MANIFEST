@@ -1,9 +1,7 @@
-Build.PL
+Makefile.PL
 Changes
 MANIFEST
-README
 bin/feedGnuplot
 t/00-load.t
 t/manifest.t
-Makefile.PL
-META.yml
+META.yml                                 Module meta-data (added by MakeMaker)

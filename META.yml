@@ -1,9 +1,10 @@
 --- #YAML:1.0
 name:               feedGnuplot
-version:            1.00
-abstract:           ~
-author:  []
-license:            unknown
+version:            1.01
+abstract:           A pipe-oriented frontend to Gnuplot
+author:
+    - Dima Kogan <dkogan@cds.caltech.edu>
+license:            perl
 distribution_type:  module
 configure_requires:
     ExtUtils::MakeMaker:  0
