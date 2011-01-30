@@ -10,7 +10,7 @@ use threads::shared;
 use Thread::Queue;
 use Text::ParseWords;
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 my %options;
 interpretCommandline(\%options);
@@ -423,7 +423,7 @@ sub mainThread
     }
 
     # regexp for a possibly floating point, possibly scientific notation number
-    my $numRE   = '[-]?[\d\.]+(?:e[-+]?\d+)?';
+    my $numRE   = '-?\d*\.?\d+(?:[Ee][-+]?\d+)?';
 
     # a point may be preceded by an id
     my $pointRE = $options{dataid} ? '(\w+)\s+' : '()';
