@@ -10,7 +10,7 @@ use threads::shared;
 use Thread::Queue;
 use Text::ParseWords;
 
-our $VERSION = '1.04';
+our $VERSION = '1.05';
 
 my %options;
 interpretCommandline(\%options);
@@ -197,7 +197,7 @@ OEF
   # do not stream in the data by default
   # point plotting by default.
   # no monotonicity checks by default
-  $options = { maxcurves => 100 };
+  $options{ maxcurves } = 100;
 
   GetOptions($options, 'stream!', 'domain!', 'dataid!', '3d!', 'colormap!', 'lines!', 'points!',
              'circles', 'legend=s@', 'autolegend!', 'xlabel=s', 'ylabel=s', 'y2label=s', 'zlabel=s',
@@ -256,8 +256,6 @@ OEF
       exit -1;
     }
   }
-
-  return \%options;
 }
 
 sub getGnuplotVersion
