@@ -5,12 +5,22 @@ use Getopt::Long;
 use Time::HiRes qw( usleep );
 use IO::Handle;
 use List::MoreUtils qw( first_index );
+use Text::ParseWords;
+
+use Config;
+if (! $Config{'useithreads'})
+{
+  print "I require a threaded perl\n";
+  exit(0);
+}
+
 use threads;
 use threads::shared;
 use Thread::Queue;
-use Text::ParseWords;
 
-our $VERSION = '1.05';
+
+
+our $VERSION = '1.06';
 
 my %options;
 interpretCommandline(\%options);
