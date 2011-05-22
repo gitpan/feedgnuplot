@@ -13,7 +13,7 @@ use Thread::Queue;
 use Pod::Usage;
 
 
-our $VERSION = '1.13';
+our $VERSION = '1.14';
 
 my %options;
 interpretCommandline(\%options);
@@ -30,7 +30,9 @@ my %curveIndices = ();
 
 # now start the data acquisition and plotting threads
 my $dataQueue;
-my $xwindow;
+
+# latest domain variable present in our data
+my $latestX;
 
 my $streamingFinished : shared = undef;
 if($options{stream})
@@ -203,7 +205,7 @@ sub interpretCommandline
   }
 
   # --xlen implies an order to the data, so I force monotonicity
-  $options{monotonic} = defined $options{xlen};
+  $options{monotonic} = 1 if defined $options{xlen};
 }
 
 sub getGnuplotVersion
@@ -401,7 +403,10 @@ sub mainThread
     {
       next if /^#/o;
 
-      if($_ !~ /^replot/o)
+      if( $options{stream} && /^clear/o )
+      { clearCurves(); }
+
+      if(! /^replot/o)
       {
         # parse the incoming data lines. The format is
         # x id0 dat0 id1 dat1 ....
@@ -422,6 +427,18 @@ sub mainThread
             /($numRE)/go or next;
             $domain[1] = $1;
           }
+          elsif( $options{monotonic} )
+          {
+            if( defined $latestX && $domain[0] < $latestX )
+            {
+              # the x-coordinate of the new point is in the past, so I wipe out all the data for this curve
+              # and start anew
+              clearCurves();
+            }
+            else
+            { $latestX = $domain[0]; }
+          }
+
         }
         else
         {
@@ -491,14 +508,14 @@ sub pruneOldData
 {
   my ($oldestx) = @_;
 
-  foreach my $xy (@curves)
+  foreach my $curve (@curves)
   {
-    if( @$xy > 1 )
+    if( @$curve > 1 )
     {
-      if( my $firstInWindow = first {$xy->[$_][0] >= $oldestx} 1..$#$xy )
-      { splice( @$xy, 1, $firstInWindow-1 ); }
+      if( my $firstInWindow = first {$curve->[$_][0] >= $oldestx} 1..$#$curve )
+      { splice( @$curve, 1, $firstInWindow-1 ); }
       else
-      { splice( @$xy, 1); }
+      { splice( @$curve, 1); }
     }
   }
 }
@@ -592,21 +609,17 @@ sub setCurveLabel
   updateCurveOptions($curve->[0], $id);
 }
 
+# remove all the curve data
+sub clearCurves
+{
+  foreach my $curve(@curves)
+  { splice( @$curve, 1 ); }
+}
+
 # function to add a point to the plot. Assumes that the curve indexed by $idx already exists
 sub pushPoint
 {
   my ($curve, $xy) = @_;
-
-  if($options{monotonic})
-  {
-    if( @$curve > 1 && $xy->[0] < $curve->[$#{$curve}][0] )
-    {
-      # the x-coordinate of the new point is in the past, so I wipe out all the data for this curve
-      # and start anew
-      splice( @$curve, 1, @$curve-1 );
-    }
-  }
-
   push @$curve, $xy;
 }
 
@@ -724,6 +737,14 @@ definition 2 domain values instead of one (I<Z> as a function of I<X> and I<Y>
 instead of I<Y> as a function of I<X>). Thus the first 2 values on each line are
 interpreted as the domain instead of just 1. The rest of the processing happens
 the same way as before.
+
+=head3 Special data commands
+
+Other than the raw data, 2 special commands are interpreted if they appear in
+the input. These are C<replot> and C<clear>. If a line of data begins with
+C<replot> and we're plotting in realtime with C<--stream>, the plot will be
+refreshed immediately. If a line of data begins with C<clear>, the plot is
+cleared, to be re-filled with any data following the C<clear>.
 
 =head2 Real-time streaming data
 
