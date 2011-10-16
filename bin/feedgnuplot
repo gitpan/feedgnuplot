@@ -12,9 +12,6 @@ use threads::shared;
 use Thread::Queue;
 use Pod::Usage;
 
-
-our $VERSION = '1.14';
-
 my %options;
 interpretCommandline(\%options);
 
@@ -298,7 +295,7 @@ sub mainThread
       print PIPE "set ytics nomirror\n";
       print PIPE "set y2tics\n";
       # if any of the ranges are given, set the range
-      print PIPE "set y2range [". $options{y2min} . ":" . $options{y2max} ."]\n" if length( $options{y2min} . $options{y2max} );
+      print PIPE "set y2range [$options{y2min}:$options{y2max}]\n" if length( $options{y2min} . $options{y2max} );
     }
 
     # set up plotting style
@@ -311,17 +308,17 @@ sub mainThread
     }
 
     # if any of the ranges are given, set the range
-    print PIPE "set xrange [". $options{xmin} . ":" . $options{xmax} ."]\n" if length( $options{xmin} . $options{xmax} );
-    print PIPE "set yrange [". $options{ymin} . ":" . $options{ymax} ."]\n" if length( $options{ymin} . $options{ymax} );
-    print PIPE "set zrange [". $options{zmin} . ":" . $options{zmax} ."]\n" if length( $options{zmin} . $options{zmax} );
+    print PIPE "set xrange [$options{xmin}:$options{xmax}]\n" if length( $options{xmin} . $options{xmax} );
+    print PIPE "set yrange [$options{ymin}:$options{ymax}]\n" if length( $options{ymin} . $options{ymax} );
+    print PIPE "set zrange [$options{zmin}:$options{zmax}]\n" if length( $options{zmin} . $options{zmax} );
     print PIPE "set style data $style\n" if $style;
     print PIPE "set grid\n";
 
-    print(PIPE "set xlabel  \"" . $options{xlabel } . "\"\n") if defined $options{xlabel};
-    print(PIPE "set ylabel  \"" . $options{ylabel } . "\"\n") if defined $options{ylabel};
-    print(PIPE "set zlabel  \"" . $options{zlabel } . "\"\n") if defined $options{zlabel};
-    print(PIPE "set y2label \"" . $options{y2label} . "\"\n") if defined $options{y2label};
-    print(PIPE "set title   \"" . $options{title  } . "\"\n") if defined $options{title};
+    print(PIPE "set xlabel  \"$options{xlabel }\"\n") if defined $options{xlabel};
+    print(PIPE "set ylabel  \"$options{ylabel }\"\n") if defined $options{ylabel};
+    print(PIPE "set zlabel  \"$options{zlabel }\"\n") if defined $options{zlabel};
+    print(PIPE "set y2label \"$options{y2label}\"\n") if defined $options{y2label};
+    print(PIPE "set title   \"$options{title  }\"\n") if defined $options{title};
 
     if($options{square})
     {
@@ -345,7 +342,7 @@ sub mainThread
 
     if($options{colormap})
     {
-      print PIPE "set cbrange [". $options{zmin} . ":" . $options{zmax} ."]\n" if length( $options{zmin} . $options{zmax} );
+      print PIPE "set cbrange [$options{zmin}:$options{zmax}]\n" if length( $options{zmin} . $options{zmax} );
     }
 
 # For the specified values, set the legend entries to 'title "blah blah"'
@@ -529,7 +526,7 @@ sub plotStoredData
   my @nonemptyCurves = grep {@$_ > 1} @curves;
   my @extraopts = map {$_->[0]{options}} @nonemptyCurves;
 
-  my $body = join(', ' , map({ '"-"' . $_} @extraopts) );
+  my $body = join(', ' , map({ "'-' $_" } @extraopts) );
   if($options{'3d'}) { print PIPE "splot $body\n"; }
   else               { print PIPE  "plot $body\n"; }
 
@@ -627,7 +624,7 @@ __END__
 
 =head1 NAME
 
-feedGnuplot - A pipe-oriented frontend to Gnuplot
+feedgnuplot - A pipe-oriented frontend to Gnuplot
 
 =head1 SYNOPSIS
 
@@ -641,14 +638,14 @@ Simple plotting of stored data:
  10 25
 
  $ seq 5 | awk '{print 2*$1, $1*$1}' |
-   feedGnuplot --lines --points --legend 0="data 0" --title "Test plot" --y2 1
+   feedgnuplot --lines --points --legend 0 "data 0" --title "Test plot" --y2 1
 
 Simple real-time plotting example: plot how much data is received on the wlan0
 network interface in bytes/second (uses bash, awk and Linux):
 
  $ while true; do sleep 1; cat /proc/net/dev; done |
    awk '/wlan0/ {if(b) {print $2-b; fflush()} b=$2}' |
-   feedGnuplot --lines --stream --xlen 10 --ylabel 'Bytes/sec' --xlabel seconds
+   feedgnuplot --lines --stream --xlen 10 --ylabel 'Bytes/sec' --xlabel seconds
 
 =head1 DESCRIPTION
 
@@ -657,10 +654,10 @@ plots from data coming in on STDIN or given in a filename passed on the
 commandline. Various data representations are supported, as is hardcopy
 output and streaming display of live data. A simple example:
 
- $ seq 5 | awk '{print 2*$1, $1*$1}' | feedGnuplot
+ $ seq 5 | awk '{print 2*$1, $1*$1}' | feedgnuplot
 
 You should see a plot with two curves. The C<awk> command generates some data to
-plot and the C<feedGnuplot> reads it in from STDIN and generates the plot. The
+plot and the C<feedgnuplot> reads it in from STDIN and generates the plot. The
 C<awk> invocation is just an example; more interesting things would be plotted
 in normal usage. No commandline-options are required for the most basic
 plotting. Input parsing is flexible; every line need not have the same number of
@@ -671,7 +668,7 @@ script. Anything not directly supported can still be done with the
 C<--extracmds> and C<--curvestyle> options. Arbitrary gnuplot commands can be
 passed in with C<--extracmds>. For example, to turn off the grid, pass in
 C<--extracmds 'unset grid'>. As many of these options as needed can be passed
-in. To add arbitrary curve styles, use C<--curvestyle curveID=extrastyle>. Pass
+in. To add arbitrary curve styles, use C<--curvestyle curveID extrastyle>. Pass
 these more than once to affect more than one curve. To apply an extra style to
 I<all> the curves, pass in C<--curvestyleall extrastyle>.
 
@@ -691,7 +688,7 @@ a plain data point like the others. Default is C<--nodomain>. Thus the original
 example above produces 2 curves, with B<1,2,3,4,5> as the I<X>-values. If we run
 the same command with --domain:
 
- $ seq 5 | awk '{print 2*$1, $1*$1}' | feedGnuplot --domain
+ $ seq 5 | awk '{print 2*$1, $1*$1}' | feedgnuplot --domain
 
 we get only 1 curve, with B<2,4,6,8,10> as the I<X>-values. As many points as
 desired can appear on a single line, but all points on a line are associated
@@ -704,7 +701,7 @@ data is to be plotted. With the C<--dataid> option, each point is represented by
 2 values: a string identifying the curve, and the value itself. If we add
 C<--dataid> to the original example:
 
- $ seq 5 | awk '{print 2*$1, $1*$1}' | feedGnuplot --dataid --autolegend
+ $ seq 5 | awk '{print 2*$1, $1*$1}' | feedgnuplot --dataid --autolegend
 
 we get 5 different curves with one point in each. The first column, as produced
 by C<awk>, is B<2,4,6,8,10>. These are interpreted as the IDs of the curves to
@@ -778,7 +775,7 @@ doing this: with a shebang (#!) or with inline perl data.
 A self-plotting, executable data file C<data> is formatted as
 
  $ cat data
- #!/usr/bin/feedGnuplot --lines --points
+ #!/usr/bin/feedgnuplot --lines --points
  2 1
  4 4
  6 9
@@ -801,7 +798,7 @@ data file can be plotted simply with
  $ ./data
 
 The caveats here are that on Linux the whole #! line is limited to 127 charaters
-and that the full path to feedGnuplot must be given. The 127 character limit is
+and that the full path to feedgnuplot must be given. The 127 character limit is
 a serious limitation, but this can likely be resolved with a kernel patch. I
 have only tried on Linux 2.6.
 
@@ -815,7 +812,7 @@ create self-plotting files:
  use strict;
  use warnings;
 
- open PLOT, "| feedGnuplot --lines --points" or die "Couldn't open plotting pipe";
+ open PLOT, "| feedgnuplot --lines --points" or die "Couldn't open plotting pipe";
  while( <DATA> )
  {
    my @xy = split;
@@ -839,7 +836,7 @@ create self-plotting files:
  30 225
 
 This is especially useful if the logged data is not in a format directly
-supported by feedGnuplot. Raw data can be stored after the __DATA__ directive,
+supported by feedgnuplot. Raw data can be stored after the __DATA__ directive,
 with a small perl script to manipulate the data into a useable format and send
 it to the plotter.
 
@@ -957,7 +954,7 @@ As an example, if line 3 of the input is "0 9 1 20"
                        How many extra values are given for each data point. Normally this
                        is 0, and does not need to be specified, but sometimes we want
                        extra data, like for colors or point sizes or error bars, etc.
-                       feedGnuplot options that require this (colormap, circles)
+                       feedgnuplot options that require this (colormap, circles)
                        automatically set it. This option is ONLY needed if unknown styles are
                        used, with --curvestyleall for instance
 
@@ -976,7 +973,7 @@ L<https://github.com/dkogan/feedgnuplot>
 
 =head1 AUTHOR
 
-Dima Kogan, C<< <dkogan at cds.caltech.edu> >>
+Dima Kogan, C<< <dima@secretsauce.net> >>
 
 =head1 LICENSE AND COPYRIGHT
 
