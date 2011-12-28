@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:               feedgnuplot
-version:            1.15
-abstract:           A pipe-oriented frontend to Gnuplot
+version:            1.18
+abstract:           Pipe-oriented frontend to Gnuplot
 author:
     - Dima Kogan <dima@secretsauce.net>
 license:            perl
