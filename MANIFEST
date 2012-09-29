@@ -4,4 +4,6 @@ bin/feedgnuplot
 bin/feedgnuplot.pod
 t/00-load.t
 t/manifest.t
+Changes
+LICENSE
 META.yml                                 Module meta-data (added by MakeMaker)
