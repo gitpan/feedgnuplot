@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               feedgnuplot
-version:            1.24
+version:            1.25
 abstract:           ~
 author:
     - Dima Kogan <dima@secretsauce.net>
@@ -9,9 +9,8 @@ distribution_type:  module
 configure_requires:
     ExtUtils::MakeMaker:  0
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    Test::Script::Run:  0
+    String::ShellQuote:  0
+requires:  {}
 no_index:
     directory:
         - t
