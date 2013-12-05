@@ -3,6 +3,7 @@ abstract: unknown
 author:
   - 'Dima Kogan <dima@secretsauce.net>'
 build_requires:
+  IPC::Run: 0
   String::ShellQuote: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
@@ -18,4 +19,4 @@ no_index:
     - t
     - inc
 requires: {}
-version: 1.28
+version: 1.29
